@@ -1,0 +1,88 @@
+#ifndef SHADER_HPP
+#define SHADER_HPP
+#include <GL/glew.h>
+#include <string>
+#include <sstream>
+#include <fstream>
+#include <iostream>
+
+
+class Shader {
+private:
+	GLint  success    = NULL;
+	GLuint ID         = NULL;
+	GLuint VertexID   = NULL;
+	GLuint FragmentID = NULL;
+
+	std::string getFile(const std::string PATH) {
+		std::ifstream file;
+		std::stringstream buffer;
+		std::string data;
+
+		file.open(PATH);
+		buffer << file.rdbuf();
+		data = buffer.str();
+		
+		file.close();
+
+		return data;
+	}
+public:
+	Shader(const std::string vertPath, const std::string fragPath) {
+		ID = glCreateProgram();
+		VertexID   = glCreateShader(GL_VERTEX_SHADER);
+		FragmentID = glCreateShader(GL_FRAGMENT_SHADER);
+
+		std::string v = getFile(vertPath);
+		std::string f = getFile(fragPath);
+
+		const char* vertexSource   = v.c_str();
+		const char* fragmentSource = f.c_str();
+
+		glShaderSource(VertexID, 1, &vertexSource, nullptr);
+		glShaderSource(FragmentID, 1, &fragmentSource, nullptr);
+
+		glCompileShader(VertexID);
+		glCompileShader(FragmentID);
+
+		glGetShaderiv(VertexID, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			int maxLength = 0;
+			char infoLog[510];
+			glGetShaderiv(VertexID, GL_INFO_LOG_LENGTH, &maxLength);
+			glGetShaderInfoLog(VertexID, maxLength, &maxLength, infoLog);
+
+			std::cout << "VSHADER COMPILATION FAILED: " << infoLog << std::endl;
+		}
+
+		glGetShaderiv(FragmentID, GL_COMPILE_STATUS, &success);
+		if (!success) {
+			int maxLength = 0;
+			char infoLog[510];
+			glGetShaderiv(VertexID, GL_INFO_LOG_LENGTH, &maxLength);
+			glGetShaderInfoLog(VertexID, maxLength, &maxLength, infoLog);
+
+			std::cout << "FSHADER COMPILATION FAILED: " << infoLog << std::endl;
+		}
+
+		glAttachShader(ID, VertexID);
+		glAttachShader(ID, FragmentID);
+		glLinkProgram(ID);
+	}
+
+	void enable() {
+		glUseProgram(ID);
+		glDeleteShader(VertexID);
+		glDeleteShader(FragmentID);
+	}
+
+	void disable() {
+		glUseProgram(0);
+	}
+
+	void del() {
+		glDeleteProgram(ID);
+	}
+};
+
+#endif
