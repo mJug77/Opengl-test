@@ -6,9 +6,12 @@ class VertexArrayObject {
 private:
 	GLuint ID;
 public:
-	VertexArrayObject(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLintptr offset) {
+	VertexArrayObject() {
 		glGenVertexArrays(1, &ID);
 		glBindVertexArray(ID);
+	}
+
+	void setAttributes(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLintptr offset) {
 		glVertexAttribPointer(index, size, type, normalized, stride, (void*)offset);
 	}
 
