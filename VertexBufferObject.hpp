@@ -6,7 +6,7 @@ class VertexBufferObject {
 private:
 	GLuint ID;
 public:
-	VertexBufferObject(GLuint size, void* data, GLenum usage) {
+	VertexBufferObject(GLuint size, void* data, GLenum usage) { // todo - fix count
 		glGenBuffers(1, &ID);
 		glBindBuffer(GL_ARRAY_BUFFER, ID);
 		glBufferData(GL_ARRAY_BUFFER, size, data, usage);

@@ -9,10 +9,9 @@
 
 class Shader {
 private:
-	GLint  success    = NULL;
-	GLuint ID         = NULL;
-	GLuint VertexID   = NULL;
-	GLuint FragmentID = NULL;
+	GLint  success;
+	GLuint VertexID;
+	GLuint FragmentID;
 
 	std::string getFile(const std::string PATH) {
 		std::ifstream file;
@@ -28,6 +27,8 @@ private:
 		return data;
 	}
 public:
+	GLuint ID;
+
 	Shader(const std::string vertPath, const std::string fragPath) {
 		ID = glCreateProgram();
 		VertexID   = glCreateShader(GL_VERTEX_SHADER);

@@ -3,16 +3,11 @@
 #include <GL/glew.h>
 
 class VertexArrayObject {
-private:
-	GLuint ID;
 public:
+	GLuint ID;
+
 	VertexArrayObject() {
 		glGenVertexArrays(1, &ID);
-		glBindVertexArray(ID);
-	}
-
-	void setAttributes(GLuint index, GLint size, GLenum type, GLboolean normalized, GLsizei stride, GLintptr offset) {
-		glVertexAttribPointer(index, size, type, normalized, stride, (void*)offset);
 	}
 
 	void bind() {
@@ -25,10 +20,6 @@ public:
 
 	void del() {
 		glDeleteVertexArrays(1, &ID);
-	}
-
-	void enable(GLuint index) {
-		glEnableVertexAttribArray(index);
 	}
 };
 #endif
