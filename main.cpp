@@ -3,6 +3,9 @@
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <iostream>
 
 #include "VertexBufferObject.hpp"
@@ -26,6 +29,7 @@ GLuint indices[] = {
 };
 
 int main() {
+	// WINDOW
 	glfwInit();
 	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Window", NULL, NULL);
 
@@ -45,8 +49,10 @@ int main() {
 
 	glViewport(0, 0, WIDTH, HEIGHT);
 
+	// SHADER PROGRAM
 	Shader shader1("Vertex.glsl", "Fragment.glsl");
 
+	// BUFFERS
 	VertexArrayObject   vao1;
 	VertexBufferObject  vbo1(sizeof(vertices), &vertices, GL_STATIC_DRAW);
 	ElementBufferObject ebo1(sizeof(indices), &indices, GL_STATIC_DRAW);
@@ -60,10 +66,20 @@ int main() {
 	glEnableVertexAttribArray(1);
 	glEnableVertexAttribArray(2);
 
-	Texture texture1(GL_TEXTURE_2D, "res/bliss.png");
-	glActiveTexture(GL_TEXTURE0);
-	texture1.bind(GL_TEXTURE_2D);
+	// TEXTURES
+	Texture texture1(GL_TEXTURE_2D, "res/container.jpg");
+	Texture texture2(GL_TEXTURE_2D, "res/awesomeface.png");
 
+	shader1.enable();
+	
+	glUniform1i(glGetUniformLocation(shader1.ID, "tex0"), 0);
+	glUniform1i(glGetUniformLocation(shader1.ID, "tex1"), 1);
+
+	// MATH
+	glm::vec4 vec(1.0f, 0.0f, 0.0f, 0.0f);
+	glm::mat4 trans(1.0f);
+	trans = glm::translate(trans, glm::vec3(1.0f, 0.0f, 0.0f));
+	vec = trans * vec;
 
 	while (!glfwWindowShouldClose(window)) {
 		glfwSwapBuffers(window);
@@ -71,11 +87,23 @@ int main() {
 		// render
 		shader1.enable();
 
+		glActiveTexture(GL_TEXTURE0);
+		texture1.bind(GL_TEXTURE_2D);
+
+		glActiveTexture(GL_TEXTURE1);
+		texture2.bind(GL_TEXTURE_2D);
+
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, &indices);
 
 		// events
 		glfwPollEvents();
 	}
+
+	shader1.del();
+	vao1.del();
+	vbo1.del();
+	ebo1.del();
+	texture1.del();
 
 	glfwTerminate();
 	return EXIT_SUCCESS;
