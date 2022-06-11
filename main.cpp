@@ -16,11 +16,11 @@
 
 
 GLfloat vertices[] = {
-	 // POSITIONS        // RGB			     //TEXTURE COORDINATES
-	 0.5f, 0.5f, 0.0f,	 1.0f, 0.0f, 0.0f,	 1.0f, 1.0f,
-	 0.5f,-0.5f, 0.0f,	 0.0f, 1.0f, 0.0f,	 1.0f, 0.0f,
-	-0.5f,-0.5f, 0.0f,	 0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
-	-0.5f, 0.5f, 0.0f,	 1.0f, 0.0f, 1.0f,   0.0f, 1.0f
+	 // POSITIONS        // RGB              //TEXTURE COORDINATES
+	 0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,
+	 0.5f,-0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
+	-0.5f,-0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
+	-0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 1.0f,   0.0f, 1.0f
 };
 
 GLuint indices[] = {
