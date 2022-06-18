@@ -1,11 +1,13 @@
-#define WIDTH 640
-#define HEIGHT 480
+#define WINDOW_WIDTH 800
+#define WINDOW_HEIGHT 600
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <IMGUI/imgui.h>
+#include <IMGUI/imgui_impl_glfw.h>
 #include <iostream>
 
 #include "VertexBufferObject.hpp"
@@ -15,12 +17,13 @@
 #include "Shader.hpp"
 
 
-GLfloat vertices[] = {
-	 // POSITIONS        // RGB              //TEXTURE COORDINATES
-	 0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,
-	 0.5f,-0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,
-	-0.5f,-0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,
-	-0.5f, 0.5f, 0.0f,   1.0f, 0.0f, 1.0f,   0.0f, 1.0f
+
+float vertices[] = {
+	// positions          // texture coords
+	 100.5f,  100.5f, 0.0f,   1.0f, 1.0f, // top right
+	 100.5f, -100.5f, 0.0f,   1.0f, 0.0f, // bottom right
+	-100.5f, -100.5f, 0.0f,   0.0f, 0.0f, // bottom left
+	-100.5f,  100.5f, 0.0f,   0.0f, 1.0f  // top left 
 };
 
 GLuint indices[] = {
@@ -31,7 +34,9 @@ GLuint indices[] = {
 int main() {
 	// WINDOW
 	glfwInit();
-	GLFWwindow* window = glfwCreateWindow(WIDTH, HEIGHT, "Window", NULL, NULL);
+	GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Window", NULL, NULL);
+
+	int x = 800, y = 600;
 
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -40,6 +45,7 @@ int main() {
 	glfwMakeContextCurrent(window);
 	glfwSetWindowAttrib(window, GLFW_RESIZABLE, false);
 
+
 	GLenum err = glewInit();
 	if (GLEW_OK != err) { 
 		std::cout << "Something is seriously wrong dumbass" << std::endl;
@@ -47,7 +53,7 @@ int main() {
 		return EXIT_FAILURE;
 	}
 
-	glViewport(0, 0, WIDTH, HEIGHT);
+	glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
 	// SHADER PROGRAM
 	Shader shader1("Vertex.glsl", "Fragment.glsl");
@@ -58,13 +64,12 @@ int main() {
 	ElementBufferObject ebo1(sizeof(indices), &indices, GL_STATIC_DRAW);
 	vao1.bind();
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
+	// ATTRIBUTES
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glEnableVertexAttribArray(0);
 	glEnableVertexAttribArray(1);
-	glEnableVertexAttribArray(2);
 
 	// TEXTURES
 	Texture texture1(GL_TEXTURE_2D, "res/container.jpg");
@@ -72,29 +77,29 @@ int main() {
 
 	shader1.enable();
 	
-	glUniform1i(glGetUniformLocation(shader1.ID, "tex0"), 0);
-	glUniform1i(glGetUniformLocation(shader1.ID, "tex1"), 1);
-
-	// MATH
-	glm::vec4 vec(1.0f, 0.0f, 0.0f, 0.0f);
-	glm::mat4 trans(1.0f);
-	trans = glm::translate(trans, glm::vec3(1.0f, 0.0f, 0.0f));
-	vec = trans * vec;
-
+	shader1.setUniformInt("tex0", 0);
+	shader1.setUniformInt("tex1", 1);
+	
 	while (!glfwWindowShouldClose(window)) {
 		glfwSwapBuffers(window);
+		// MATH
+		glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, -1.0f, 100.0f);
+		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(100, 0.0f, 0.0f));
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(500, 100.0f, 0.0f));
+
+		glm::mat4 mvp = proj * view * model;
 
 		// render
 		shader1.enable();
 
 		glActiveTexture(GL_TEXTURE0);
 		texture1.bind(GL_TEXTURE_2D);
-
 		glActiveTexture(GL_TEXTURE1);
 		texture2.bind(GL_TEXTURE_2D);
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, &indices);
+		shader1.setUniformMat4f("proj", mvp);
 
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, &indices);
 		// events
 		glfwPollEvents();
 	}

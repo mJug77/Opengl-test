@@ -71,6 +71,18 @@ public:
 		glLinkProgram(ID);
 	}
 
+	void setUniformInt(const char* var_name, GLint value) {
+		glUniform1i(glGetUniformLocation(ID, var_name), value);
+	}
+
+	void setUniformFloat(const char* var_name, GLfloat value) {
+		glUniform1f(glGetUniformLocation(ID, var_name), value);
+	}
+
+	void setUniformMat4f(const char* var_name, glm::mat4 matrix) {
+		glUniformMatrix4fv(glGetUniformLocation(ID, var_name), 1, GL_FALSE, glm::value_ptr(matrix));
+	}
+
 	void enable() {
 		glUseProgram(ID);
 		glDeleteShader(VertexID);
