@@ -1,14 +1,18 @@
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 600
 
+
+#include <iostream>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
+#include <IMGUI/imgui.h>
+#include <IMGUI/imgui_impl_glfw.h>
+#include <IMGUI/imgui_impl_opengl3.h>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <IMGUI/imgui.h>
-#include <IMGUI/imgui_impl_glfw.h>
-#include <iostream>
 
 #include "VertexBufferObject.hpp"
 #include "ElementBufferObject.hpp"
@@ -17,18 +21,23 @@
 #include "Shader.hpp"
 
 
-
-float vertices[] = {
-	// positions          // texture coords
-	 100.5f,  100.5f, 0.0f,   1.0f, 1.0f, // top right
-	 100.5f, -100.5f, 0.0f,   1.0f, 0.0f, // bottom right
-	-100.5f, -100.5f, 0.0f,   0.0f, 0.0f, // bottom left
-	-100.5f,  100.5f, 0.0f,   0.0f, 1.0f  // top left 
+GLfloat vertices[] = { 
+	// COORDINATES          // TexCoord
+	-0.5f, 0.0f,  0.5f, 	1.0f, 1.0f,
+	-0.5f, 0.0f, -0.5f, 	1.0f, 0.0f,
+	 0.5f, 0.0f, -0.5f, 	0.0f, 0.0f,
+	 0.5f, 0.0f,  0.5f, 	0.0f, 1.0f,
+	 0.0f, 0.8f,  0.0f, 	1.0f, 0.0f
 };
 
+// Indices for vertices order
 GLuint indices[] = {
-	0, 1, 3,
-	1, 2, 3
+	0, 1, 2,
+	0, 2, 3,
+	0, 1, 4,
+	1, 2, 4,
+	2, 3, 4,
+	3, 0, 4
 };
 
 int main() {
@@ -79,17 +88,51 @@ int main() {
 	
 	shader1.setUniformInt("tex0", 0);
 	shader1.setUniformInt("tex1", 1);
-	
+
+	// IMGUI
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	ImGui::StyleColorsDark();
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init("#version 330");
+
+	// VARS
+	float scale = 0.50f;
+	float X = 0.0f, Y = 0.0f;
+
+	float rotation = 0.0f;
+	double prevTime = glfwGetTime();
+
+	glEnable(GL_DEPTH_TEST);
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwSwapBuffers(window);
-		// MATH
-		glm::mat4 proj = glm::ortho(0.0f, 800.0f, 0.0f, 600.0f, -1.0f, 100.0f);
-		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(100, 0.0f, 0.0f));
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(500, 100.0f, 0.0f));
+		// TIME
+		double currTime = glfwGetTime();
+		if (currTime - prevTime >= 1 / 60) {
+			rotation += 0.05f;
+			prevTime = currTime;
+		}
 
-		glm::mat4 mvp = proj * view * model;
+		// MATH
+		glm::mat4 model = glm::mat4(1.0f);
+		glm::mat4 view  = glm::mat4(1.0f);
+		glm::mat4 proj  = glm::mat4(1.0f);
+
+		model = glm::rotate(model, glm::radians(rotation), glm::vec3(0.0f, 1.0f, 0.0f));
+		view = glm::translate(view, glm::vec3(0.0f, -0.5f, -2.0f));
+		proj = glm::perspective(glm::radians(45.0f), float(WINDOW_WIDTH / WINDOW_HEIGHT), 0.1f, 100.0f);
+
+
+		//glm::mat4 mvp = proj * view * model;
 
 		// render
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		ImGui_ImplGlfw_NewFrame();
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui::NewFrame();
+
 		shader1.enable();
 
 		glActiveTexture(GL_TEXTURE0);
@@ -97,12 +140,29 @@ int main() {
 		glActiveTexture(GL_TEXTURE1);
 		texture2.bind(GL_TEXTURE_2D);
 
-		shader1.setUniformMat4f("proj", mvp);
+		shader1.setUniformMat4f("proj", proj);
+		shader1.setUniformMat4f("view", view);
+		shader1.setUniformMat4f("model", model);
+		shader1.setUniformFloat("scale", scale);
 
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, &indices);
+		glDrawElements(GL_TRIANGLES, sizeof(indices) / sizeof(int), GL_UNSIGNED_INT, &indices);
+
+		ImGui::Begin("I'm gui window");
+			ImGui::Text("Hello, World!");
+			ImGui::SliderFloat("Scale", &scale, 0.0f, 100.0f);
+			ImGui::SliderFloat("X", &X, 0.0f, 600.0f);
+			ImGui::SliderFloat("Y", &Y, 0.0f, 800.0f);
+		ImGui::End();
+
+		ImGui::Render();
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		// events
 		glfwPollEvents();
 	}
+
+	ImGui_ImplGlfw_Shutdown();
+	ImGui_ImplOpenGL3_Shutdown();
+	ImGui::DestroyContext();
 
 	shader1.del();
 	vao1.del();
